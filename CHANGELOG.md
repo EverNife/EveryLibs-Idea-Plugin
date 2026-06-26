@@ -17,6 +17,8 @@
 
 ### Changed
 
+- Track the renamed fluent `ClassReflect` accessors (`getField`/`getMethod`/`getTypedMethod`),
+  which were `get`-prefixed in the reflection library.
 - Restructure the project onto the official
   [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template):
   repository configuration moved to `settings.gradle.kts`, metadata-driven `gradle.properties`,

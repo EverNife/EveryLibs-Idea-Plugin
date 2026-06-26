@@ -41,9 +41,9 @@ final class RecognizedLookup {
         ALL.add(new RecognizedLookup(METHOD_REFLECTION, "getMethod", 1, MemberKind.METHOD, TargetSource.CLASS_ARG0));
         ALL.add(new RecognizedLookup(METHOD_REFLECTION, "getTypedMethod", 1, MemberKind.METHOD, TargetSource.CLASS_ARG0));
         // fluent ClassReflect<C>: target is the receiver's generic, member name at arg 0
-        ALL.add(new RecognizedLookup(CLASS_REFLECT, "field", 0, MemberKind.FIELD, TargetSource.RECEIVER_GENERIC));
-        ALL.add(new RecognizedLookup(CLASS_REFLECT, "method", 0, MemberKind.METHOD, TargetSource.RECEIVER_GENERIC));
-        ALL.add(new RecognizedLookup(CLASS_REFLECT, "typedMethod", 0, MemberKind.METHOD, TargetSource.RECEIVER_GENERIC));
+        ALL.add(new RecognizedLookup(CLASS_REFLECT, "getField", 0, MemberKind.FIELD, TargetSource.RECEIVER_GENERIC));
+        ALL.add(new RecognizedLookup(CLASS_REFLECT, "getMethod", 0, MemberKind.METHOD, TargetSource.RECEIVER_GENERIC));
+        ALL.add(new RecognizedLookup(CLASS_REFLECT, "getTypedMethod", 0, MemberKind.METHOD, TargetSource.RECEIVER_GENERIC));
     }
 
     final String declaringClassFqn;

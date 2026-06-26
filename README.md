@@ -7,7 +7,7 @@ IDE already does for the JDK's `Class.getDeclaredField("…")`.
 ```java
 FieldReflection.INSTANCE.getField(Player.class, "na|");      // ⌃Space → "name", "nameTag", …
 FCReflectionUtil.getMethods().getMethod(Player.class, "set|");  // → "setName", "setHealth", …
-ClassReflect.of(Player.class).method("get|");                // → "getHealth", …
+ClassReflect.of(Player.class).getMethod("get|");             // → "getHealth", …
 ```
 
 Ctrl-click on a resolved name navigates to the `PsiField`/`PsiMethod`; Rename rewrites the string.
@@ -75,8 +75,8 @@ Install the zip via *Settings → Plugins → ⚙ → Install Plugin from Disk�
   `SomeClass.class` token, a `Class<X>`-typed expression, a `ClassReflect<C>` receiver's generic, or
   a **class-name string** — so `getField("some.Type", "<caret>")` completes the field name against
   the named class, with no `Class` token in sight. Covers `FieldReflection.getField`,
-  `MethodReflection.getMethod`/`getTypedMethod`, and the fluent `ClassReflect.field`/`method`/
-  `typedMethod`. A member name is an identifier, so a dotted string (a stray class name) is never
+  `MethodReflection.getMethod`/`getTypedMethod`, and the fluent `ClassReflect.getField`/`getMethod`/
+  `getTypedMethod`. A member name is an identifier, so a dotted string (a stray class name) is never
   treated as a member.
 - **Class-name** strings (the `Class.forName("…")` analogue): `ClassReflection.getClass`/
   `getFirstClass`/`getUntypedClass`/`isClassLoaded`, `ClassReflect.of(String)`, and the class-name
