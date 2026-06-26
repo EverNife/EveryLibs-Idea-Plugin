@@ -54,6 +54,23 @@ public class EveryLibsReferenceTest extends LightJavaCodeInsightFixtureTestCase 
         assertTrue("expected private field 'health'", names.contains("health"));
     }
 
+    public void testMethodCompletionOffersDeclaredButNotObjectMembers() {
+        myFixture.configureByText("Use.java",
+                "import br.com.finalcraft.everylibs.reflection.lookup.MethodReflection;\n" +
+                "import sample.Target;\n" +
+                "class Use {\n" +
+                "  void m() { MethodReflection.INSTANCE.getMethod(Target.class, \"<caret>\"); }\n" +
+                "}\n");
+        myFixture.complete(CompletionType.BASIC);
+        List<String> names = myFixture.getLookupElementStrings();
+        assertNotNull(names);
+        assertTrue(names.contains("setName"));
+        assertTrue(names.contains("getHealth"));
+        // java.lang.Object members are noise in the popup and must be filtered from completion.
+        assertFalse("Object's wait() should not be offered", names.contains("wait"));
+        assertFalse("Object's hashCode() should not be offered", names.contains("hashCode"));
+    }
+
     public void testMethodNameResolvesForNavigation() {
         myFixture.configureByText("Use.java",
                 "import br.com.finalcraft.everylibs.reflection.lookup.MethodReflection;\n" +

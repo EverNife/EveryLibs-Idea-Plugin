@@ -2,10 +2,12 @@ package dev.petrus.everylibs.idea;
 
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.psi.CommonClassNames;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiLiteralExpression;
+import com.intellij.psi.PsiMember;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiReferenceBase;
@@ -64,12 +66,18 @@ final class EveryLibsMemberReference extends PsiReferenceBase<PsiLiteralExpressi
         List<LookupElement> variants = new ArrayList<>();
         if (kind == MemberKind.FIELD) {
             for (PsiField field : MemberWalk.fields(target)) {
+                if (isFromObject(field)) {
+                    continue;
+                }
                 variants.add(LookupElementBuilder.create(field.getName())
                         .withIcon(field.getIcon(0))
                         .withTypeText(field.getType().getPresentableText()));
             }
         } else {
             for (PsiMethod method : MemberWalk.methods(target)) {
+                if (isFromObject(method)) {
+                    continue;
+                }
                 variants.add(LookupElementBuilder.create(method.getName())
                         .withIcon(method.getIcon(0))
                         .withTailText(parameterText(method), true)
@@ -77,6 +85,16 @@ final class EveryLibsMemberReference extends PsiReferenceBase<PsiLiteralExpressi
             }
         }
         return variants.toArray();
+    }
+
+    /**
+     * Suggestion-only filter: a member declared purely on {@link Object} (an un-overridden
+     * {@code toString}/{@code wait}/…) is noise in the popup. {@link #resolve()} stays faithful — it
+     * still resolves such a name if the developer types it — so navigation/rename are unaffected.
+     */
+    private static boolean isFromObject(PsiMember member) {
+        PsiClass owner = member.getContainingClass();
+        return owner != null && CommonClassNames.JAVA_LANG_OBJECT.equals(owner.getQualifiedName());
     }
 
     @Nullable
