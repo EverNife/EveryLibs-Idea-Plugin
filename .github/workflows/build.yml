@@ -1,0 +1,132 @@
+# GitHub Actions workflow for building, testing and verifying the plugin.
+#
+# - Build the plugin ZIP with the 'buildPlugin' task and upload it as a workflow artifact.
+# - Run the 'check' task and upload test reports on failure.
+# - Run the 'verifyPlugin' task (plugin structure + IntelliJ Plugin Verifier).
+#
+# This plugin is intentionally NOT published to JetBrains Marketplace, so the template's
+# release-draft / publish steps are omitted. CI here only validates that the plugin builds,
+# tests and verifies cleanly.
+#
+# GitHub Actions reference: https://docs.github.com/actions
+
+name: Build
+on:
+  # Trigger on pushes to the 'main' branch (avoids duplicate checks for e.g. dependabot PRs).
+  push:
+    branches: [ main ]
+  # Trigger on any pull request.
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # Prepare the environment and build the plugin.
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          large-packages: false
+
+      - name: Fetch Sources
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build plugin
+        run: ./gradlew buildPlugin
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: plugin-distribution
+          path: ./build/distributions/*.zip
+
+  # Run tests and upload test reports on failure.
+  test:
+    name: Test
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          large-packages: false
+
+      - name: Fetch Sources
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+
+      - name: Run Tests
+        run: ./gradlew check
+
+      - name: Collect Tests Result
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: tests-result
+          path: ${{ github.workspace }}/build/reports/tests
+
+  # Run plugin structure verification along with IntelliJ Plugin Verifier.
+  verify:
+    name: Verify plugin
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          large-packages: false
+
+      - name: Fetch Sources
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+
+      - name: Run Plugin Verification tasks
+        run: ./gradlew verifyPlugin
+
+      - name: Collect Plugin Verifier Result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: pluginVerifier-result
+          path: ${{ github.workspace }}/build/reports/pluginVerifier
