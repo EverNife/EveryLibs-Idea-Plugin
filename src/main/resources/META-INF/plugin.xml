@@ -1,0 +1,28 @@
+<idea-plugin>
+    <id>dev.petrus.everylibs.idea</id>
+    <name>EveryLibs Reflection Assistant</name>
+    <vendor email="petrusab1@gmail.com" url="https://maven.petrus.dev">Petrus</vendor>
+
+    <description><![CDATA[
+        Reflection-aware autocomplete, navigation and rename for the
+        <b>EveryLibs reflection</b> library.
+        <p>
+        Inside the member-name string of a recognized lookup call, pressing
+        completion offers the target class's members — exactly like the IDE
+        already does for <code>Class.getDeclaredField("…")</code>:
+        <ul>
+          <li><code>FieldReflection.getField(SomeClass.class, "&lt;caret&gt;")</code> → field names</li>
+          <li><code>MethodReflection.getMethod(SomeClass.class, "&lt;caret&gt;")</code> → method names</li>
+          <li><code>ClassReflect.of(SomeClass.class).method("&lt;caret&gt;")</code> → method names</li>
+        </ul>
+        Ctrl-click navigates to the member and Rename updates the string.
+    ]]></description>
+
+    <!-- com.intellij.java is the current (post-2019.2) form; it pulls in Java PSI. -->
+    <depends>com.intellij.java</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <psi.referenceContributor language="JAVA"
+            implementation="dev.petrus.everylibs.idea.EveryLibsReferenceContributor"/>
+    </extensions>
+</idea-plugin>
