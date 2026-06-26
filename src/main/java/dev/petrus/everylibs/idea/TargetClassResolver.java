@@ -1,12 +1,16 @@
 package dev.petrus.everylibs.idea;
 
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassObjectAccessExpression;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiExpressionList;
+import com.intellij.psi.PsiLiteralExpression;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiUtil;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,8 +53,31 @@ final class TargetClassResolver {
             PsiType operand = ((PsiClassObjectAccessExpression) first).getOperand().getType();
             return PsiUtil.resolveClassInClassTypeOnly(operand);
         }
+        // A fully-qualified class-name string: getField("some.Type", "field") — resolve the named
+        // class so the member-name argument completes against it, with no Class token in sight.
+        PsiClass named = fromClassNameLiteral(first);
+        if (named != null) {
+            return named;
+        }
         // A `Class<X>`-typed expression (e.g. a variable): extract X.
         return genericArgumentOf(first.getType(), "java.lang.Class");
+    }
+
+    @Nullable
+    private static PsiClass fromClassNameLiteral(PsiExpression expression) {
+        if (!(expression instanceof PsiLiteralExpression)) {
+            return null;
+        }
+        Object value = ((PsiLiteralExpression) expression).getValue();
+        if (!(value instanceof String)) {
+            return null;
+        }
+        String fqn = ((String) value).trim();
+        if (fqn.isEmpty()) {
+            return null;
+        }
+        Project project = expression.getProject();
+        return JavaPsiFacade.getInstance(project).findClass(fqn, GlobalSearchScope.allScope(project));
     }
 
     @Nullable

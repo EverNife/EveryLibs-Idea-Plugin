@@ -13,18 +13,17 @@ import java.util.List;
  * Functional tests over the reference contributor. Stubs of the recognized API are added to the
  * in-memory project so a call resolves to the right declaring class; a sample target supplies the
  * members completion/resolve should find.
+ * <p>
+ * Each FieldReflection-using test stubs only the {@code getField} overload it exercises. The real
+ * class carries both the {@code Class}-target and {@code String}-target overloads (the compiler and
+ * the real IDE resolve the pair fine), but the lightweight in-memory resolver in this fixture cannot
+ * disambiguate two 2-arg overloads, so they are kept apart per test.
  */
 public class EveryLibsReferenceTest extends LightJavaCodeInsightFixtureTestCase {
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        myFixture.addClass(
-                "package br.com.finalcraft.everylibs.reflection.lookup;\n" +
-                "public final class FieldReflection {\n" +
-                "  public static final FieldReflection INSTANCE = new FieldReflection();\n" +
-                "  public <T> Object getField(Class<?> target, String name) { return null; }\n" +
-                "}\n");
         myFixture.addClass(
                 "package br.com.finalcraft.everylibs.reflection.lookup;\n" +
                 "public final class MethodReflection {\n" +
@@ -41,7 +40,26 @@ public class EveryLibsReferenceTest extends LightJavaCodeInsightFixtureTestCase 
                 "}\n");
     }
 
+    private void addFieldReflectionWithClassTarget() {
+        myFixture.addClass(
+                "package br.com.finalcraft.everylibs.reflection.lookup;\n" +
+                "public final class FieldReflection {\n" +
+                "  public static final FieldReflection INSTANCE = new FieldReflection();\n" +
+                "  public Object getField(Class<?> target, String name) { return null; }\n" +
+                "}\n");
+    }
+
+    private void addFieldReflectionWithStringTarget() {
+        myFixture.addClass(
+                "package br.com.finalcraft.everylibs.reflection.lookup;\n" +
+                "public final class FieldReflection {\n" +
+                "  public static final FieldReflection INSTANCE = new FieldReflection();\n" +
+                "  public Object getField(String className, String name) { return null; }\n" +
+                "}\n");
+    }
+
     public void testFieldNameCompletionIncludesPrivateInherited() {
+        addFieldReflectionWithClassTarget();
         myFixture.configureByText("Use.java",
                 "import br.com.finalcraft.everylibs.reflection.lookup.FieldReflection;\n" +
                 "import sample.Target;\n" +
@@ -54,6 +72,36 @@ public class EveryLibsReferenceTest extends LightJavaCodeInsightFixtureTestCase 
         assertTrue("expected public field 'name'", names.contains("name"));
         // The point of the library: a visible-but-inaccessible private field is still offered.
         assertTrue("expected private field 'health'", names.contains("health"));
+    }
+
+    public void testFieldNameCompletionViaStringClassName() {
+        // Target given as a class-name string: the field-name argument completes against the named
+        // class, with no Class token anywhere.
+        addFieldReflectionWithStringTarget();
+        myFixture.configureByText("Use.java",
+                "import br.com.finalcraft.everylibs.reflection.lookup.FieldReflection;\n" +
+                "class Use {\n" +
+                "  void m() { FieldReflection.INSTANCE.getField(\"sample.Target\", \"<caret>\"); }\n" +
+                "}\n");
+        myFixture.complete(CompletionType.BASIC);
+        List<String> names = myFixture.getLookupElementStrings();
+        assertNotNull(names);
+        assertTrue(names.contains("name"));
+        assertTrue(names.contains("health"));
+    }
+
+    public void testDottedStringIsNotAMemberReference() {
+        // A member name is an identifier; a dotted string is never a field/method and must not be
+        // decorated as a (stray) member reference.
+        addFieldReflectionWithClassTarget();
+        myFixture.configureByText("Use.java",
+                "import br.com.finalcraft.everylibs.reflection.lookup.FieldReflection;\n" +
+                "import sample.Target;\n" +
+                "class Use {\n" +
+                "  void m() { FieldReflection.INSTANCE.getField(Target.class, \"no.such.B<caret>\"); }\n" +
+                "}\n");
+        PsiReference reference = myFixture.getFile().findReferenceAt(myFixture.getCaretOffset() - 1);
+        assertNull("a dotted string must not become a member reference", reference);
     }
 
     public void testMethodCompletionOffersDeclaredButNotObjectMembers() {
@@ -111,6 +159,7 @@ public class EveryLibsReferenceTest extends LightJavaCodeInsightFixtureTestCase 
     public void testFacadeStyleQualifierStillMatchesOnDeclaringClass() {
         // Reached through a wrapper method whose return type is FieldReflection: the match is on the
         // DECLARING class of getField, not on the qualifier expression.
+        addFieldReflectionWithClassTarget();
         myFixture.addClass(
                 "package sample;\n" +
                 "import br.com.finalcraft.everylibs.reflection.lookup.FieldReflection;\n" +

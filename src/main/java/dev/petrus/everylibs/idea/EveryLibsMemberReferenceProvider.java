@@ -32,6 +32,7 @@ public final class EveryLibsMemberReferenceProvider extends PsiReferenceProvider
         if (!(literal.getValue() instanceof String)) {
             return PsiReference.EMPTY_ARRAY;
         }
+        String literalText = (String) literal.getValue();
 
         PsiElement argumentList = literal.getParent();
         if (!(argumentList instanceof PsiExpressionList)) {
@@ -54,9 +55,11 @@ public final class EveryLibsMemberReferenceProvider extends PsiReferenceProvider
         String declaringFqn = declaring.getQualifiedName();
         int index = indexOf((PsiExpressionList) argumentList, literal);
 
-        // 1) Member-name lookup: a field/method name resolved against a known target class.
+        // 1) Member-name lookup: a field/method name resolved against a known target class. A member
+        //    name is a Java identifier, so a dotted/spaced string (e.g. a stray class name) is never a
+        //    member and gets no reference.
         RecognizedLookup lookup = RecognizedLookup.find(declaringFqn, method.getName());
-        if (lookup != null && index == lookup.nameArgIndex) {
+        if (lookup != null && index == lookup.nameArgIndex && isPlausibleMemberName(literalText)) {
             PsiClass target = TargetClassResolver.resolve(lookup, call);
             if (target != null) {
                 return new PsiReference[]{new EveryLibsMemberReference(literal, target, lookup.memberKind)};
@@ -69,6 +72,15 @@ public final class EveryLibsMemberReferenceProvider extends PsiReferenceProvider
         }
 
         return PsiReference.EMPTY_ARRAY;
+    }
+
+    /**
+     * A field/method name never contains a dot, so a dotted string is a class name, not a member, and
+     * is left alone. (Kept deliberately narrow: completion inserts a dummy identifier with a trailing
+     * space, so a stricter "valid identifier" check would suppress the completion popup.)
+     */
+    private static boolean isPlausibleMemberName(String text) {
+        return text.indexOf('.') < 0;
     }
 
     private static int indexOf(PsiExpressionList arguments, PsiLiteralExpression literal) {

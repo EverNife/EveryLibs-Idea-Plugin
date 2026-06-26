@@ -57,9 +57,13 @@ Install the zip via *Settings → Plugins → ⚙ → Install Plugin from Disk�
 ## Scope (v1) and how to extend
 
 **v1** covers:
-- **Member-name** lookups whose target is resolvable at edit time: `FieldReflection.getField`,
-  `MethodReflection.getMethod`/`getTypedMethod` (target `SomeClass.class`), and the fluent
-  `ClassReflect.field`/`method`/`typedMethod` (target = the receiver's generic).
+- **Member-name** lookups whose target is resolvable at edit time. The target can be a
+  `SomeClass.class` token, a `Class<X>`-typed expression, a `ClassReflect<C>` receiver's generic, or
+  a **class-name string** — so `getField("some.Type", "<caret>")` completes the field name against
+  the named class, with no `Class` token in sight. Covers `FieldReflection.getField`,
+  `MethodReflection.getMethod`/`getTypedMethod`, and the fluent `ClassReflect.field`/`method`/
+  `typedMethod`. A member name is an identifier, so a dotted string (a stray class name) is never
+  treated as a member.
 - **Class-name** strings (the `Class.forName("…")` analogue): `ClassReflection.getClass`/
   `getFirstClass`/`getUntypedClass`/`isClassLoaded`, `ClassReflect.of(String)`, and the class-name
   argument of the `getField(String className, …)` / `getMethod(String className, …)` overloads.
@@ -67,9 +71,6 @@ Install the zip via *Settings → Plugins → ⚙ → Install Plugin from Disk�
   package/class completion, navigation and rename for free.
 
 Out of scope (gracefully ignored — contribute no reference):
-- The **member-name** argument of the `getField(String className, String name, …)` overload — the
-  class is a runtime string, so its members are not resolved at edit time (the class name itself IS
-  completed; only the dependent member name is not).
 - **NMS / obfuscated targets.** Where the dev workspace is Mojang-mapped but the runtime is
   Spigot/obfuscated, the IDE name and the runtime name differ; rather than risk suggesting the wrong
   string, the member reference is left **soft** and the developer owns the call. EveryLibs is a
