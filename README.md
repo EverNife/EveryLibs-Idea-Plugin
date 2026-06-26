@@ -19,6 +19,15 @@ Java 8 API floor (Jabel + `options.release = 8`); an IntelliJ plugin targets the
 (JDK 17+) and cannot live under that constraint. It sits inside the repo for convenience but builds
 standalone, with its own `settings.gradle.kts` and wrapper.
 
+The project scaffold follows the official
+[IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template):
+metadata-driven [`gradle.properties`](gradle.properties), repository configuration in
+[`settings.gradle.kts`](settings.gradle.kts) via the IntelliJ Platform repositories extension,
+[Gradle Changelog Plugin](https://github.com/JetBrains/gradle-changelog-plugin) integration
+([`CHANGELOG.md`](CHANGELOG.md)), predefined Run/Debug configurations under [`.run/`](.run), and a CI
+workflow. The one deliberate departure is language: the production sources are Java (`java.lang.reflect`
+/ PSI code), so the `java` plugin stands in for the template's Kotlin JVM plugin.
+
 ## How it works
 
 A single `PsiReferenceContributor` registers one broad provider (any string literal that is a method
@@ -51,6 +60,10 @@ Requires a JDK 17 and network access (the first build downloads the IntelliJ Pla
 ./gradlew verifyPlugin   # IntelliJ Plugin Verifier (binary compatibility)
 ./gradlew test           # LightJavaCodeInsightFixtureTestCase suite
 ```
+
+These tasks are also exposed as Run/Debug configurations (*Run Plugin*, *Run Tests*,
+*Run Verifications*) under [`.run/`](.run), picked up automatically when the project is opened in
+IntelliJ IDEA.
 
 Install the zip via *Settings → Plugins → ⚙ → Install Plugin from Disk…*.
 

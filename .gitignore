@@ -1,4 +1,6 @@
-.gradle/
-build/
-.intellijPlatform/
-.kotlin/
+.DS_Store
+.gradle
+.idea
+.intellijPlatform
+.kotlin
+build
