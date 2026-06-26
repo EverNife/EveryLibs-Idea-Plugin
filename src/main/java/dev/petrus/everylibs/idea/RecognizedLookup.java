@@ -11,7 +11,7 @@ import java.util.List;
  * Each entry maps a (declaring class FQN + method name) to where the <b>target class</b> comes from
  * and which argument carries the <b>member name</b>. Matching on the <em>declaring</em> class is what
  * makes the singleton path ({@code FieldReflection.INSTANCE.getField(...)}) and the facade path
- * ({@code FCReflectionUtil.fields().getField(...)}) behave identically — both resolve to a method
+ * ({@code FCReflectionUtil.getFields().getField(...)}) behave identically — both resolve to a method
  * declared on {@code FieldReflection}.
  * <p>
  * To grow coverage, add a row here; nothing else needs to know the API shape.

@@ -6,7 +6,7 @@ IDE already does for the JDK's `Class.getDeclaredField("…")`.
 
 ```java
 FieldReflection.INSTANCE.getField(Player.class, "na|");      // ⌃Space → "name", "nameTag", …
-FCReflectionUtil.methods().getMethod(Player.class, "set|");  // → "setName", "setHealth", …
+FCReflectionUtil.getMethods().getMethod(Player.class, "set|");  // → "setName", "setHealth", …
 ClassReflect.of(Player.class).method("get|");                // → "getHealth", …
 ```
 
@@ -35,7 +35,7 @@ argument); all the precise matching happens in code, not in the pattern:
 
 Matching on the **declaring class** of the called method (`FieldReflection`/`MethodReflection`/
 `ClassReflect`) is what makes the singleton (`FieldReflection.INSTANCE.getField`) and the facade
-(`FCReflectionUtil.fields().getField`) behave the same — the qualifier expression is irrelevant.
+(`FCReflectionUtil.getFields().getField`) behave the same — the qualifier expression is irrelevant.
 
 `getRangeInElement()` is intentionally not overridden and **no `ElementManipulator` is registered**:
 the platform's built-in `StringLiteralManipulator` already gives the inside-the-quotes range and

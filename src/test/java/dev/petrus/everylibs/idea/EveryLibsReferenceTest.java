@@ -164,7 +164,7 @@ public class EveryLibsReferenceTest extends LightJavaCodeInsightFixtureTestCase 
                 "package sample;\n" +
                 "import br.com.finalcraft.everylibs.reflection.lookup.FieldReflection;\n" +
                 "public final class FCReflectionUtil {\n" +
-                "  public static FieldReflection fields() { return FieldReflection.INSTANCE; }\n" +
+                "  public static FieldReflection getFields() { return FieldReflection.INSTANCE; }\n" +
                 "}\n");
         // Empty prefix keeps the lookup popup open (more than one field), so the variant list is
         // observable instead of being auto-inserted on a single match.
@@ -172,7 +172,7 @@ public class EveryLibsReferenceTest extends LightJavaCodeInsightFixtureTestCase 
                 "import sample.FCReflectionUtil;\n" +
                 "import sample.Target;\n" +
                 "class Use {\n" +
-                "  void m() { FCReflectionUtil.fields().getField(Target.class, \"<caret>\"); }\n" +
+                "  void m() { FCReflectionUtil.getFields().getField(Target.class, \"<caret>\"); }\n" +
                 "}\n");
         myFixture.complete(CompletionType.BASIC);
         List<String> names = myFixture.getLookupElementStrings();
