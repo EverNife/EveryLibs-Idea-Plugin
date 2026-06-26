@@ -14,10 +14,11 @@ plugins {
 
 // `group` and `version` are applied from gradle.properties automatically.
 
-// IntelliJ 2024.2 runs on a JDK 17 runtime; compile and test against Java 17.
+// IntelliJ 2024.2 ships and runs on JetBrains Runtime 21; compile and test against Java 21
+// so the plugin matches the platform's bytecode/API level.
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 

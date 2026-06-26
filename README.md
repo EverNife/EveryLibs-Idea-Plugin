@@ -52,7 +52,8 @@ writes Rename back into the literal.
 
 ## Build & run
 
-Requires a JDK 17 and network access (the first build downloads the IntelliJ Platform).
+Requires a JDK 21 (the IntelliJ Platform Gradle Plugin can provision it via the foojay toolchain
+resolver) and network access — the first build downloads the IntelliJ Platform.
 
 ```bash
 ./gradlew runIde         # launch a sandbox IDE with the plugin
