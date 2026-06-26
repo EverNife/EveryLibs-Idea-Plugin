@@ -1,6 +1,8 @@
 package dev.petrus.everylibs.idea;
 
 import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
@@ -82,6 +84,28 @@ public class EveryLibsReferenceTest extends LightJavaCodeInsightFixtureTestCase 
         assertNotNull(reference);
         assertTrue(reference.resolve() instanceof PsiMethod);
         assertEquals("setName", ((PsiMethod) reference.resolve()).getName());
+    }
+
+    public void testClassNameArgumentResolvesLikeForName() {
+        myFixture.addClass(
+                "package br.com.finalcraft.everylibs.reflection.lookup;\n" +
+                "public final class ClassReflection {\n" +
+                "  public static final ClassReflection INSTANCE = new ClassReflection();\n" +
+                "  public Class<?> getClass(String lookupName) { return null; }\n" +
+                "}\n");
+        myFixture.addClass("package sample;\npublic class Widget {}\n");
+        // Caret on the last char of the class name so we land inside the final segment's reference
+        // (JavaClassReferenceProvider builds one reference per dotted segment).
+        myFixture.configureByText("Use.java",
+                "import br.com.finalcraft.everylibs.reflection.lookup.ClassReflection;\n" +
+                "class Use {\n" +
+                "  void m() { ClassReflection.INSTANCE.getClass(\"sample.Widget<caret>\"); }\n" +
+                "}\n");
+        PsiReference reference = myFixture.getFile().findReferenceAt(myFixture.getCaretOffset() - 1);
+        assertNotNull("class-name string should contribute a reference", reference);
+        PsiElement resolved = reference.resolve();
+        assertTrue("class-name string should resolve to a PsiClass", resolved instanceof PsiClass);
+        assertEquals("sample.Widget", ((PsiClass) resolved).getQualifiedName());
     }
 
     public void testFacadeStyleQualifierStillMatchesOnDeclaringClass() {

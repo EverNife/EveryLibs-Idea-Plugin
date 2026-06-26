@@ -51,22 +51,24 @@ public final class EveryLibsMemberReferenceProvider extends PsiReferenceProvider
         if (declaring == null || declaring.getQualifiedName() == null) {
             return PsiReference.EMPTY_ARRAY;
         }
+        String declaringFqn = declaring.getQualifiedName();
+        int index = indexOf((PsiExpressionList) argumentList, literal);
 
-        RecognizedLookup lookup = RecognizedLookup.find(declaring.getQualifiedName(), method.getName());
-        if (lookup == null) {
-            return PsiReference.EMPTY_ARRAY;
+        // 1) Member-name lookup: a field/method name resolved against a known target class.
+        RecognizedLookup lookup = RecognizedLookup.find(declaringFqn, method.getName());
+        if (lookup != null && index == lookup.nameArgIndex) {
+            PsiClass target = TargetClassResolver.resolve(lookup, call);
+            if (target != null) {
+                return new PsiReference[]{new EveryLibsMemberReference(literal, target, lookup.memberKind)};
+            }
         }
 
-        if (indexOf((PsiExpressionList) argumentList, literal) != lookup.nameArgIndex) {
-            return PsiReference.EMPTY_ARRAY;
+        // 2) Class-name lookup: a fully-qualified class name string, resolved like Class.forName("…").
+        if (ClassNameSupport.isClassNameArgument(declaringFqn, method, index)) {
+            return ClassNameSupport.referencesFor(literal);
         }
 
-        PsiClass target = TargetClassResolver.resolve(lookup, call);
-        if (target == null) {
-            return PsiReference.EMPTY_ARRAY;
-        }
-
-        return new PsiReference[]{new EveryLibsMemberReference(literal, target, lookup.memberKind)};
+        return PsiReference.EMPTY_ARRAY;
     }
 
     private static int indexOf(PsiExpressionList arguments, PsiLiteralExpression literal) {
