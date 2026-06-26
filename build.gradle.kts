@@ -3,19 +3,16 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
+    // This is a Java plugin (the production sources are java.lang.reflect / PSI code), so the
+    // template's Kotlin JVM plugin is intentionally swapped for the `java` plugin.
     id("java")
-    id("org.jetbrains.intellij.platform") version "2.16.0"
+    // Version inherited from the `org.jetbrains.intellij.platform.settings` plugin in settings.gradle.kts.
+    id("org.jetbrains.intellij.platform")
+    // Patches the plugin's change-notes from CHANGELOG.md; auto-wired by the IntelliJ Platform plugin.
+    id("org.jetbrains.changelog")
 }
 
-group = "dev.petrus.everylibs"
-version = "1.0.0"
-
-repositories {
-    mavenCentral()
-    intellijPlatform {
-        defaultRepositories()
-    }
-}
+// `group` and `version` are applied from gradle.properties automatically.
 
 // IntelliJ 2024.2 runs on a JDK 17 runtime; compile and test against Java 17.
 java {
@@ -25,6 +22,14 @@ java {
 }
 
 dependencies {
+    // The platform test framework drives the LightJavaCodeInsightFixtureTestCase suite as JUnit.
+    testImplementation("junit:junit:4.13.2")
+    // The platform's assertions reference opentest4j, which it does not export to the test classpath
+    // on the 242 line. (Bundled from 251+, so this becomes redundant if the target is bumped.)
+    testImplementation("org.opentest4j:opentest4j:1.3.0")
+
+    // IntelliJ Platform Gradle Plugin Dependencies Extension:
+    // https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
         // Target a recent IDE that ships the Java module the contributor depends on.
         intellijIdeaCommunity("2024.2")
@@ -33,16 +38,13 @@ dependencies {
         // LightJavaCodeInsightFixtureTestCase lives in the Java plugin's test framework.
         testFramework(TestFrameworkType.Plugin.Java)
     }
-    // The platform test framework drives JUnit 3/4 TestCase subclasses.
-    testImplementation("junit:junit:4.13.2")
-    // The platform's assertions reference opentest4j, which it does not export to the test classpath.
-    testImplementation("org.opentest4j:opentest4j:1.3.0")
 }
 
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            // 242 == 2024.2. Leave untilBuild open so the plugin keeps loading on newer IDEs.
+            // 242 == 2024.2. Leave untilBuild open so the plugin keeps loading on newer IDEs
+            // instead of being pinned to the build it was compiled against.
             sinceBuild = "242"
             untilBuild = provider { null }
         }
